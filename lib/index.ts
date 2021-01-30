@@ -1,9 +1,9 @@
-import { CloudFormation, Lambda } from "aws-sdk";
-import { DescribeStackResourceOutput } from "aws-sdk/clients/cloudformation";
-import * as h from "handlebars";
+import { CloudFormation } from "aws-sdk";
+import * as hbs from "handlebars";
 import * as fs from "fs";
 import { GetResourceArn, GetResourceUrl } from "./get-resource-info";
 import * as dotenv from "dotenv";
+import { orderBy } from "lodash";
 
 // If you have a .env file, we load it here
 dotenv.config();
@@ -35,12 +35,12 @@ async function GetCloudFormationStacks(): Promise<Stack[]> {
             const stackResource: Stack = {
                 StackName: stack.StackName, Resources: []
             };
-            stackResource.Resources = description.StackResources!
+            stackResource.Resources = orderBy(description.StackResources!
                 .map(r => ({
                     ...r,
                     ARN: GetResourceArn(r),
                     url: GetResourceUrl(r)
-                })) as any;
+                })), ["url"], "asc");
             StackResources.push(stackResource);
         }
         catch (error) {
@@ -51,12 +51,11 @@ async function GetCloudFormationStacks(): Promise<Stack[]> {
             });
         }
     }
-    console.log(StackResources[0].Resources);
     return StackResources;
 }
 
 GetCloudFormationStacks().then(stacks => {
-    const compiledHtml = h.compile(html)({ stacks });
+    const compiledHtml = hbs.compile(html)({ stacks });
     console.log(compiledHtml);
     fs.writeFileSync(process.env.TEMPLATE_OUTPUT_PATH, compiledHtml);
 });
