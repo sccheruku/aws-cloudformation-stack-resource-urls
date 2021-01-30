@@ -6,6 +6,7 @@
 
 ## Setup
 The following environment variables need to be present before running the script: 
+
 `STACK_KEYWORD`: Cloudformation stacks which contain the following keyword will be included in the collection. 
 
 `REGION`: AWS Region
