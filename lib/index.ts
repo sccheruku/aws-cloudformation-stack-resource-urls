@@ -55,7 +55,7 @@ async function GetCloudFormationStacks(): Promise<Stack[]> {
 }
 
 GetCloudFormationStacks().then(stacks => {
-    const compiledHtml = hbs.compile(html)({ stacks });
+    const compiledHtml = hbs.compile(html)({ stacks, generatedAt: new Date() });
     console.log(compiledHtml);
     fs.writeFileSync(process.env.TEMPLATE_OUTPUT_PATH, compiledHtml);
 });
