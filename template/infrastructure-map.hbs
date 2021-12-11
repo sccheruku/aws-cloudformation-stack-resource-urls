@@ -1,29 +1,34 @@
 <html>
-    <body>
-        {{#each stacks}}
-        <h2>{{this.StackName}}</h2>
-        <table>
+
+<body>
+    {{#each stacks}}
+    <h2>{{this.StackName}}</h2>
+    <table>
+        <tr>
+            <th>Resource</th>
+            <th>ARN</th>
+            <th>Type</th>
+        </tr>
+        <tbody>
+            {{#each this.Resources}}
             <tr>
-                <th>Resource</th>
-                <th>ARN</th>
-                <th>Type</th>
+                <td>{{this.LogicalResourceId}}</td>
+                <td>
+                    {{#if this.url}}
+                    <a target="_blank" href="{{this.url}}">Resource</a>
+                    {{else}}
+                    {{this.PhysicalResourceId}}
+                    {{/if}}
+                    {{#if this.secondaryUrl}}
+                    <a target="_blank" href="{{this.url}}">Logs</a>
+                    {{/if}}
+                </td>
+                <td>{{this.ResourceType}}</td>
             </tr>
-            <tbody>
-                {{#each this.Resources}}
-                <tr>
-                    <td>{{this.LogicalResourceId}}</td>
-                    <td>
-                        {{#if this.url}}
-                            <a target="_blank" href="{{this.url}}">{{this.PhysicalResourceId}}</a>
-                        {{else}}
-                            {{this.PhysicalResourceId}}
-                        {{/if}}
-                    </td>
-                    <td>{{this.ResourceType}}</td>
-                </tr>
-                {{/each}}
-            </tbody>
-        </table>
-        {{/each}}
-    </body>
+            {{/each}}
+        </tbody>
+    </table>
+    {{/each}}
+</body>
+
 </html>

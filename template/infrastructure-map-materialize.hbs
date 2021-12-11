@@ -1,7 +1,9 @@
 <html>
+
 <head>
     <!-- Compiled and minified CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
     <!-- Compiled and minified JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
@@ -35,7 +37,7 @@
         <tr>
             <th>Type</th>
             <th>Resource</th>
-            <th>ARN</th>
+            <th>Links</th>
         </tr>
         <tbody>
             {{#each this.Resources}}
@@ -44,9 +46,12 @@
                 <td>{{this.LogicalResourceId}}</td>
                 <td>
                     {{#if this.url}}
-                    <a target="_blank" href="{{this.url}}">{{this.PhysicalResourceId}}</a>
+                    <a target="_blank" href="{{this.url}}"><i class="material-icons">launch</i></a>
                     {{else}}
                     {{this.PhysicalResourceId}}
+                    {{/if}}
+                    {{#if this.secondaryUrl}}
+                        <a target="_blank" href="{{this.secondaryUrl}}"><i class="material-icons">list</i></a>
                     {{/if}}
                 </td>
             </tr>

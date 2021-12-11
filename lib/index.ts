@@ -1,21 +1,21 @@
 import { CloudFormation } from "aws-sdk";
 import * as hbs from "handlebars";
 import * as fs from "fs";
-import { GetResourceArn, GetResourceUrl } from "./get-resource-info";
-import * as dotenv from "dotenv";
-import { orderBy } from "lodash";
-
-// If you have a .env file, we load it here
-dotenv.config();
-
-const stackKeyword = process.env.STACK_KEYWORD;
-const region = process.env.REGION;
-const cf = new CloudFormation({ region });
-const html = fs.readFileSync(process.env.TEMPLATE_INPUT_PATH).toString("utf-8");
+import { GetCloudWatchUrl, GetResourceArn, GetResourceUrl } from "./get-resource-info";
+import { orderBy, runInContext } from "lodash";
+import * as cla from "command-line-args";
+type Options = {
+    keyword: string;
+    region: string;
+    input: string;
+    output: string;
+    "link-lambda-to-logs"?: boolean;
+}
 
 type StackResource = CloudFormation.StackResource & {
     ARN?: string;
     url?: string;
+    secondaryUrl?: string;
 }
 
 type Stack = {
@@ -24,10 +24,28 @@ type Stack = {
     error?: Error;
 }
 
-async function GetCloudFormationStacks(): Promise<Stack[]> {
+var options: Options = {} as any;
+
+async function execute() {
+    options = cla([
+        { name: "keyword", alias: "k", type: String, },
+        { name: "region", alias: "r", type: String, },
+        { name: "input", alias: "i", type: String, },
+        { name: "output", alias: "o", type: String, },
+        { name: "link-lambda-to-logs", type: Boolean, defaultValue: false, },
+    ]) as Options;
+
+    console.log(options);
+
+    await run(options);
+}
+
+
+async function GetCloudFormationStacks(options: Options): Promise<Stack[]> {
+    const cf = new CloudFormation({ region: options.region });
     let StackResources: Stack[] = [];
     const result = await cf.listStacks().promise();
-    const stacks = result.StackSummaries?.filter(stack => stack.StackName.includes(stackKeyword)) || [];
+    const stacks = result.StackSummaries?.filter(stack => stack.StackName.includes(options.keyword)) || [];
     for (let index = 0; index < stacks.length; index++) {
         const stack = stacks[index];
         try {
@@ -39,7 +57,8 @@ async function GetCloudFormationStacks(): Promise<Stack[]> {
                 .map(r => ({
                     ...r,
                     ARN: GetResourceArn(r),
-                    url: GetResourceUrl(r)
+                    url: GetResourceUrl(r, options.region),
+                    secondaryUrl: (options["link-lambda-to-logs"] && r.ResourceType === "AWS::Lambda::Function") ? GetCloudWatchUrl(r, options.region) : null
                 })), ["url"], "asc");
             StackResources.push(stackResource);
         }
@@ -54,8 +73,15 @@ async function GetCloudFormationStacks(): Promise<Stack[]> {
     return StackResources;
 }
 
-GetCloudFormationStacks().then(stacks => {
-    const compiledHtml = hbs.compile(html)({ stacks, generatedAt: new Date() });
-    console.log(compiledHtml);
-    fs.writeFileSync(process.env.TEMPLATE_OUTPUT_PATH, compiledHtml);
-});
+
+async function run(options: Options) {
+    const html = fs.readFileSync(options.input).toString("utf-8");
+    GetCloudFormationStacks(options).then(stacks => {
+        const compiledHtml = hbs.compile(html)({ stacks, generatedAt: new Date() });
+        console.log(compiledHtml);
+        fs.writeFileSync(options.output, compiledHtml);
+    });
+}
+
+
+execute();

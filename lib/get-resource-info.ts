@@ -1,4 +1,7 @@
 import { CloudFormation } from "aws-sdk";
+
+const _console = "console.aws.amazon.com";
+
 export function GetResourceArn(resource: CloudFormation.StackResource) {
     const accountId = resource.StackId?.split(":")[4];
     const partition = "aws";
@@ -11,11 +14,9 @@ export function GetResourceArn(resource: CloudFormation.StackResource) {
     }
 }
 
-export function GetResourceUrl(resource: CloudFormation.StackResource) {
+export function GetResourceUrl(resource: CloudFormation.StackResource, region: string) {
     const accountId = resource.StackId?.split(":")[4];
     const partition = "aws";
-    const region = process.env.REGION;
-    const _console = "console.aws.amazon.com";
     switch (resource.ResourceType) {
         case "AWS::CertificateManager::Certificate":
             return `https://${_console}/acm/home?region=${region}#/?id=${resource.PhysicalResourceId}`;
@@ -70,4 +71,7 @@ export function GetResourceUrl(resource: CloudFormation.StackResource) {
             return null;
         }
     }
+}
+export function GetCloudWatchUrl(r: CloudFormation.StackResource, region: string): any {
+    return `https://${region}.${_console}/cloudwatch/home?region=${region}#logStream:group=%252Faws%252Flambda%252F${r.PhysicalResourceId}`
 }
