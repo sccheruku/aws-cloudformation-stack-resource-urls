@@ -41,7 +41,7 @@ async function execute() {
 }
 
 
-async function GetCloudFormationStacks(options: Options): Promise<Stack[]> {
+export async function GetCloudFormationStacks(options: Options): Promise<Stack[]> {
     const cf = new CloudFormation({ region: options.region });
     let StackResources: Stack[] = [];
     const result = await cf.listStacks().promise();
@@ -73,9 +73,12 @@ async function GetCloudFormationStacks(options: Options): Promise<Stack[]> {
     return StackResources;
 }
 
+export function readFile(filename: string) {
+    return fs.readFileSync(filename).toString("utf-8");
+}
 
 async function run(options: Options) {
-    const html = fs.readFileSync(options.input).toString("utf-8");
+    const html = readFile(options.input);
     GetCloudFormationStacks(options).then(stacks => {
         const compiledHtml = hbs.compile(html)({ stacks, generatedAt: new Date() });
         console.log(compiledHtml);
